@@ -13,7 +13,7 @@ For this project, we will train an agent to navigate (and collect bananas!) in a
 
 ### Video 
 
-[RL Agent](https://youtu.be/6IsXZbtR4xc)
+[![](http://img.youtube.com/vi/6IsXZbtR4xc/0.jpg)](http://www.youtube.com/watch?v=6IsXZbtR4xc "")
 
 A reward of +1 is provided for collecting a yellow banana, and a reward of -1 is provided for collecting a blue banana.  Thus, the goal of your agent is to collect as many yellow bananas as possible while avoiding blue bananas.  
 

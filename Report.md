@@ -3,7 +3,7 @@
 
 ## Video 
 
-[RL Agent](https://youtu.be/6IsXZbtR4xc)
+[![](http://img.youtube.com/vi/6IsXZbtR4xc/0.jpg)](http://www.youtube.com/watch?v=6IsXZbtR4xc "")
 
 ## Learning algorithm
 
