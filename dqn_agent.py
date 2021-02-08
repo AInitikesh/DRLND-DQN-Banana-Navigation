@@ -2,30 +2,25 @@ import numpy as np
 import random
 from collections import namedtuple, deque
 
-from model import QNetwork
+from model import QNetwork, DuelQNetwork
 
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from segment_tree import *
 
-BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 64         # minibatch size
+BUFFER_SIZE = int(1e6)  # replay buffer size
+BATCH_SIZE = 128         # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
-LR = 1e-3               # learning rate 
+LR = 0.0001               # learning rate 
 UPDATE_EVERY = 2        # how often to update the network
-PER_E = 0.01
-PER_A = 0.6
-PER_B = 0.4
-PER_B_INC = 0.001
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed, double_dqn=False):
+    def __init__(self, state_size, action_size, seed, double_dqn=False, duel_q=False):
         """Initialize an Agent object.
         
         Params
@@ -39,8 +34,12 @@ class Agent():
         self.seed = random.seed(seed)
 
         # Q-Network
-        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
-        self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
+        if duel_q:
+            self.qnetwork_local = DuelQNetwork(state_size, action_size, seed).to(device)
+            self.qnetwork_target = DuelQNetwork(state_size, action_size, seed).to(device)
+        else:
+            self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
+            self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
 
         # Replay memory
@@ -90,11 +89,9 @@ class Agent():
             experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples 
             gamma (float): discount factor
         """
-        idx, weights, states, actions, rewards, next_states, dones = experiences
+        states, actions, rewards, next_states, dones = experiences
         
 
-        ## TODO: compute and minimize the loss
-        "*** YOUR CODE HERE ***"
         Q_expected = self.qnetwork_local(states).gather(1, actions)
                
         if self.double_dqn:
@@ -103,20 +100,9 @@ class Agent():
         else:
             Q_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
         
-        Q_targets = rewards + gamma * ((Q_targets_next) * (1 - dones))    
+        Q_targets = rewards + (gamma * (Q_targets_next) * (1 - dones))    
         
-        delta = abs(Q_targets - Q_expected.detach()).numpy().tolist()
- 
-        
-        td = (Q_targets - Q_expected)
-        loss =  td ** 2
-        loss *= weights
-        loss = loss.mean()
-        
-        self.memory.update_priorities(idx, delta)
-
-#         loss = (weights * F.mse_loss(Q_expected, Q_targets)).mean()
-
+        loss = F.mse_loss(Q_expected, Q_targets)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -142,7 +128,7 @@ class ReplayBuffer:
     """Fixed-size buffer to store experience tuples."""
 
     def __init__(self, action_size, buffer_size, batch_size, seed):
-        """Initialize a PrioratisedReplayBuffer object.
+        """Initialize a ReplayBuffer object.
 
         Params
         ======
@@ -151,47 +137,29 @@ class ReplayBuffer:
             batch_size (int): size of each training batch
             seed (int): random seed
         """
-        self.per_a = PER_A
-        self.per_e = PER_E
-        self.per_b = PER_B
-        self.per_b_inc = PER_B_INC
         self.action_size = action_size
-        self.memory = deque(maxlen=buffer_size)
-        self.sum_priorities = 0
+        self.memory = deque(maxlen=buffer_size)  
         self.batch_size = batch_size
-        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done", "priority"])
+        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
         self.seed = random.seed(seed)
     
     def add(self, state, action, reward, next_state, done):
         """Add a new experience to memory."""
-        e = self.experience(state, action, reward, next_state, done, self.per_e)
-        self.sum_priorities += self.per_e ** self.per_a
+        e = self.experience(state, action, reward, next_state, done)
         self.memory.append(e)
     
     def sample(self):
-        """Priority sample a batch of experiences from memory."""
-        sampling_probabililites =  [((i.priority ** self.per_a) / self.sum_priorities) for i in self.memory]
-        idx = random.choices(population=range(len(self.memory)), weights=sampling_probabililites, k=self.batch_size)
-        
-        states = torch.from_numpy(np.vstack([self.memory[i].state for i in idx if i is not None])).float().to(device)
-        actions = torch.from_numpy(np.vstack([self.memory[i].action for i in idx if i is not None])).long().to(device)
-        rewards = torch.from_numpy(np.vstack([self.memory[i].reward for i in idx if i is not None])).float().to(device)
-        next_states = torch.from_numpy(np.vstack([self.memory[i].next_state for i in idx if i is not None])).float().to(device)
-        dones = torch.from_numpy(np.vstack([self.memory[i].done for i in idx if i is not None]).astype(np.uint8)).float().to(device)
-        
-        self.per_b = np.min([1., self.per_b + self.per_b_inc])
-        weights = np.vstack([((len(self.memory) * sampling_probabililites[i]) ** (-self.per_b)) for i in idx if i is not None])
-        weights = torch.from_numpy(weights / weights.max()).float().to(device)
-        
-        return (idx, weights, states, actions, rewards, next_states, dones)
+        """Randomly sample a batch of experiences from memory."""
+        experiences = random.sample(self.memory, k=self.batch_size)
 
-    def update_priorities(self, idx, delta):
-        for i, d in zip(idx, delta):
-            e = self.memory[i]
-            new_priority = d[0] + self.per_e
-            self.sum_priorities = self.sum_priorities - (e.priority ** self.per_a) + (new_priority ** self.per_a)
-            self.memory[i] = self.experience(e.state, e.action, e.reward, e.next_state, e.done, new_priority)
-        
+        states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
+        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
+        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
+        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
+        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
+  
+        return (states, actions, rewards, next_states, dones)
+
     def __len__(self):
         """Return the current size of internal memory."""
         return len(self.memory)

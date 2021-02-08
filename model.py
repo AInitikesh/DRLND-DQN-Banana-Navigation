@@ -15,32 +15,45 @@ class QNetwork(nn.Module):
         """
         super(QNetwork, self).__init__()
         self.seed = torch.manual_seed(seed)
-        "*** YOUR CODE HERE ***"
-        self.feauture_layer = nn.Sequential(
-            nn.Linear(state_size, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU()
-        )
-
-        self.value_stream = nn.Sequential(
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 1)
-        )
-
-        self.advantage_stream = nn.Sequential(
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, action_size)
-        )
+        self.fc1 = nn.Linear(state_size, 64)
+        self.fc2 = nn.Linear(64, 64)
+        self.fc3 = nn.Linear(64, action_size)
         
 
     def forward(self, state):
         """Build a network that maps state -> action values."""
-        features = self.feauture_layer(state)
-        values = self.value_stream(features)
-        advantages = self.advantage_stream(features)
+        x = F.relu(self.fc1(state))
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
+
+class DuelQNetwork(nn.Module):
+    """Actor (Policy) Model."""
+
+    def __init__(self, state_size, action_size, seed):
+        """Initialize parameters and build model.
+        Params
+        ======
+            state_size (int): Dimension of each state
+            action_size (int): Dimension of each action
+            seed (int): Random seed
+        """
+        super(DuelQNetwork, self).__init__()
+        self.seed = torch.manual_seed(seed)
+
+        self.fc1 = nn.Linear(state_size, 64)
+
+        self.v_in = nn.Linear(64, 4)
+        self.v_out = nn.Linear(4, 1)
+
+        self.a_in = nn.Linear(64, 32)
+        self.a_out = nn.Linear(32, action_size)
+        
+
+    def forward(self, state):
+        """Build a network that maps state -> action values."""
+        x = F.relu(self.fc1(state))
+        values = self.v_out(F.relu(self.v_in(x)))
+        advantages = self.a_out(F.relu(self.a_in(x)))
         qvals = values + (advantages - advantages.mean())
         
         return qvals
