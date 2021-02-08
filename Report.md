@@ -3,14 +3,14 @@
 
 ## Learning algorithm
 
-A reward of +1 is provided for collecting a yellow banana, and a reward of -1 is provided for collecting a blue banana. Thus, the goal of agent is to collect as many yellow bananas as possible while avoiding blue bananas.
+A reward of +1 is provided for collecting a yellow banana, and a reward of -1 is provided for collecting a blue banana.  Thus, the goal of your agent is to collect as many yellow bananas as possible while avoiding blue bananas.  
 
-The state space has 37 dimensions and contains the agent's velocity, along with ray-based perception of objects around agent's forward direction. Given this information, the agent has to learn how to best select actions. Four discrete actions are available, corresponding to:
+The state space has 37 dimensions and contains the agent's velocity, along with ray-based perception of objects around agent's forward direction.  Given this information, the agent has to learn how to best select actions.  Four discrete actions are available, corresponding to:
+- **`0`** - move forward.
+- **`1`** - move backward.
+- **`2`** - turn left.
+- **`3`** - turn right.
 
-0 - move forward.
-1 - move backward.
-2 - turn left.
-3 - turn right.
 The task is episodic, and in order to solve the environment, agent must get an average score of +13 over 100 consecutive episodes. 
 Training algorithm is `In [6]: dqn` inside [Navigation.ipynb](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/main/Navigation.ipynb). This function iterates over `n_episodes=2000` to train the dqn agen model. Max lenght of episode can be `max_t=10000`. Epsilon-greedy action selection starts at `eps_start=0.5` and it decreases over the training episodes by `eps_decay=0.98` and can go minimum upto `eps_end=0.01`. The epsilon-greedy values were choosen by trial and error method. Maximum timesteps value should be equal to Agent replay buffer. After 2k episodes model was not learning much and average score was constant so it doesn't makes sense to train the Agent after 2K steps. 
 
@@ -38,7 +38,7 @@ We can choose between QNetwork or Dueling QNetwork by setting `duel_q` to true w
 
 ## Plot of Rewards
 
-![Reward Plot QNetwork](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/50216e48211c18ea37ec732a0ff4e2265f713c06/plot/vanila-dqn.png)
+![Reward Plot QNetwork](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/main/plots/vanila-dqn.png)
 
 ```
 Episode 100	Average Score: 5.53
@@ -47,7 +47,7 @@ Episode 236	Average Score: 13.01
 Environment solved in 136 episodes!	Average Score: 13.01
 ```
 
-![Reward Plot Dueling QNetwork](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/50216e48211c18ea37ec732a0ff4e2265f713c06/plot/dueling-dqn.png)
+![Reward Plot Dueling QNetwork](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/main/plots/dueling-dqn.png)
 
 ```
 Episode 100	Average Score: 4.10
