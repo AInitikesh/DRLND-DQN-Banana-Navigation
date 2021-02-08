@@ -12,7 +12,7 @@ The state space has 37 dimensions and contains the agent's velocity, along with 
 - **`3`** - turn right.
 
 The task is episodic, and in order to solve the environment, agent must get an average score of +13 over 100 consecutive episodes. 
-Training algorithm is `In [6]: dqn` inside [Navigation.ipynb](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/main/Navigation.ipynb). This function iterates over `n_episodes=2000` to train the dqn agen model. Max lenght of episode can be `max_t=10000`. Epsilon-greedy action selection starts at `eps_start=0.5` and it decreases over the training episodes by `eps_decay=0.98` and can go minimum upto `eps_end=0.01`. The epsilon-greedy values were choosen by trial and error method. Maximum timesteps value should be equal to Agent replay buffer. After 2k episodes model was not learning much and average score was constant so it doesn't makes sense to train the Agent after 2K steps. 
+Training algorithm is `In [6]: dqn` inside [Navigation.ipynb](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/main/Navigation.ipynb). This function iterates over `n_episodes=2000` to train the dqn agent model. Max length of episode can be `max_t=10000`. Epsilon-greedy action selection starts at `eps_start=0.5` and it decreases over the training episodes by `eps_decay=0.98` and can go minimum upto `eps_end=0.01`. The epsilon-greedy values were choosen by trial and error method. Maximum timesteps value should be equal to Agent replay buffer. After 2k episodes model was not learning much and average score was constant so it doesn't makes sense to train the Agent after 2K steps. 
 
 ### DQN Agent Hyper Parameters
 
@@ -29,14 +29,16 @@ Where
 Along with this Agent was implemented in DQN mode and Double DQN mode setting `double_dqn` will activate the double dqn. 
 
 ### Neural Network
-Two neural network Architectures were implemented for evaluation purpose.
+Two neural network architectures were implemented for evaluation purpose.
 1) [QNetwork model](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/50216e48211c18ea37ec732a0ff4e2265f713c06/model.py#L5) - which consist of an input layer of state size(37), two fully connected hidden layes of size 64 having relu activation and output fully connected layer size of action_size(4)
 
-2) [Dueling QNetwork model](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/50216e48211c18ea37ec732a0ff4e2265f713c06/model.py#L29) - which consist of an input layer of state size(37), one fully connected hidden layes of size 64 having relu activation. This layer splits then into two streams. First Stream with fully connected hidden layer of size 4 with relu activation and outputs state value V(s) of size 1. Second stream with fully connected hidden layer of size 32 with relu activation and outputs advantage values A(s, a) of size action_size(4). Finally these layers merge into one as Q(s, a) = V(s) + Normalised A(s, a)
+2) [Dueling QNetwork model](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/50216e48211c18ea37ec732a0ff4e2265f713c06/model.py#L29) - which consist of an input layer of state size(37), one fully connected hidden layes of size 64 having relu activation. This layer splits then into two streams. First stream with fully connected hidden layer of size 4 with relu activation and output fully connected layer state value V(s) of size 1. Second stream with fully connected hidden layer of size 32 with relu activation and output output fully connected layer advantage values A(s, a) of size action_size(4). Finally these layers merge into one as Q(s, a) = V(s) + Normalised A(s, a)
 
 We can choose between QNetwork or Dueling QNetwork by setting `duel_q` to true while intialising the agent. 
 
 ## Plot of Rewards
+
+### Reward Plot QNetwork
 
 ![Reward Plot QNetwork](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/main/plots/vanila-dqn.png)
 
@@ -46,6 +48,7 @@ Episode 200	Average Score: 12.09
 Episode 236	Average Score: 13.01
 Environment solved in 136 episodes!	Average Score: 13.01
 ```
+### Reward Plot Dueling QNetwork
 
 ![Reward Plot Dueling QNetwork](https://github.com/AInitikesh/DRLND-DQN-Banana-Navigation/blob/main/plots/dueling-dqn.png)
 
@@ -58,4 +61,4 @@ Environment solved in 163 episodes!	Average Score: 13.04
 
 ## Ideas for Future Work
 
-Dueling network and Double Q learning methods should idealy out perform the scores of vanila DQN. As a future task I might retune the hyperparamets to suite Dueling network and Double Q learning methods. Further improvements could be implementing [Prioritized Experience Replay](https://arxiv.org/abs/1511.05952), [multi-step bootstrap targets](https://arxiv.org/abs/1602.01783), [Distributional DQN](https://arxiv.org/abs/1707.06887), [Noisy DQN](https://arxiv.org/abs/1706.10295). Also insted of capturing state space of 37 dimensions we could directly use pixel values of the environemt image and train a network with CNN layers at the begining of Q network.
+Dueling network and Double Q learning methods should idealy out perform the scores of vanila DQN. As a future task I might retune the hyperparamets to suite Dueling network and Double Q learning methods. Further improvements could be implementing [Prioritized Experience Replay](https://arxiv.org/abs/1511.05952), [multi-step bootstrap targets](https://arxiv.org/abs/1602.01783), [Distributional DQN](https://arxiv.org/abs/1707.06887), [Noisy DQN](https://arxiv.org/abs/1706.10295). Also insted of capturing state space of 37 dimensions we could directly use pixel values of the environment image and train a network with CNN layers at the begining of Q network.
